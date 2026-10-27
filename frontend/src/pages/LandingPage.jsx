@@ -43,7 +43,7 @@ export default function LandingPage() {
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6">
-          Tugas Selesai Tepat Waktu, <br />
+          Tugas Selesai Tepat yeye Waktu, <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">
             Jam Tidur Tetap Terjaga.
           </span>
