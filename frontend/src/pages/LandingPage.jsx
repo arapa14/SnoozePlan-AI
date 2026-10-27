@@ -39,11 +39,11 @@ export default function LandingPage() {
       <main className="max-w-4xl mx-auto px-6 text-center my-auto py-12">
         <div className="inline-flex items-center gap-2 bg-indigo-950/60 border border-indigo-800 text-indigo-300 text-xs px-3 py-1.5 rounded-full mb-6">
           <Sparkles className="w-3.5 h-3.5" />
-          Optimalisasi Jadwal Cerdas Mahasiswa FMIPA UNJ
+          Optimizer Jadwal Cerdas Mahasiswa FMIPA UNJ
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6">
-          Tugas Selesai Tepat yeye Waktu, <br />
+          Tugas Selesai Tepat Waktu, <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">
             Jam Tidur Tetap Terjaga.
           </span>
