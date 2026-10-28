@@ -11,21 +11,57 @@ import {
   User,
   Sliders,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 
 const inputCls =
   "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition";
 
 const WEIGHT_FIELDS = [
-  { key: "w_urgency", label: "Urgensi", hint: "Kedekatan deadline", accent: "accent-rose-500" },
-  { key: "w_importance", label: "Kepentingan", hint: "Pengaruh terhadap tujuan", accent: "accent-amber-500" },
-  { key: "w_consequence", label: "Konsekuensi", hint: "Dampak jika telat", accent: "accent-orange-500" },
-  { key: "w_duration", label: "Durasi", hint: "Kecocokan dengan work block", accent: "accent-sky-500" },
-  { key: "w_availability", label: "Ketersediaan", hint: "Kecocokan dengan waktu luang", accent: "accent-emerald-500" },
+  {
+    key: "w_urgency",
+    label: "Urgensi",
+    hint: "Kedekatan deadline",
+    accent: "accent-rose-500",
+  },
+  {
+    key: "w_importance",
+    label: "Kepentingan",
+    hint: "Pengaruh terhadap tujuan",
+    accent: "accent-amber-500",
+  },
+  {
+    key: "w_consequence",
+    label: "Konsekuensi",
+    hint: "Dampak jika telat",
+    accent: "accent-orange-500",
+  },
+  {
+    key: "w_duration",
+    label: "Durasi",
+    hint: "Kecocokan dengan work block",
+    accent: "accent-sky-500",
+  },
+  {
+    key: "w_availability",
+    label: "Ketersediaan",
+    hint: "Kecocokan dengan waktu luang",
+    accent: "accent-emerald-500",
+  },
 ];
 
 function hm(t) {
   return t ? String(t).slice(0, 5) : "";
+}
+
+// Helper untuk menghitung selisih jam (mendukung lewat tengah malam)
+function calculateSleepWindow(start, end) {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let startMins = sh * 60 + sm;
+  let endMins = eh * 60 + em;
+  if (endMins <= startMins) endMins += 24 * 60;
+  return (endMins - startMins) / 60;
 }
 
 export default function Settings() {
@@ -50,12 +86,23 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Hitung batas maksimal tidur berdasarkan selisih jam mulai dan bangun
+  const maxSleepAvailable = calculateSleepWindow(
+    form.sleep_start,
+    form.sleep_end,
+  );
+  const isSleepInvalid = Number(form.min_sleep_hours) > maxSleepAvailable;
+
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
 
     Promise.all([
-      supabase.from("user_preferences").select("*").eq("user_id", userId).single(),
+      supabase
+        .from("user_preferences")
+        .select("*")
+        .eq("user_id", userId)
+        .single(),
       supabase.from("persona_presets").select("*").order("sort_order"),
     ]).then(([prefsRes, presetsRes]) => {
       if (cancelled) return;
@@ -86,11 +133,26 @@ export default function Settings() {
     return () => {
       cancelled = true;
     };
-    // profile loaded by auth context; sengaja tidak dijadikan dep agar tidak loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Saat jam tidur diubah, otomatis turunkan min_sleep_hours jika melebihi kapasitas
+  const handleTimeChange = (key, value) => {
+    setForm((f) => {
+      const newForm = { ...f, [key]: value };
+      const maxAvailable = calculateSleepWindow(
+        newForm.sleep_start,
+        newForm.sleep_end,
+      );
+
+      // Jika durasi minimal saat ini lebih besar dari jendela baru, turunkan
+      if (Number(newForm.min_sleep_hours) > maxAvailable) {
+        newForm.min_sleep_hours = maxAvailable;
+      }
+      return newForm;
+    });
+  };
 
   const applyPreset = (preset) => {
     setForm((f) => ({
@@ -118,6 +180,15 @@ export default function Settings() {
 
   const handleSave = async () => {
     if (!userId) return;
+
+    // Validasi sebelum kirim ke database
+    if (isSleepInvalid) {
+      alert(
+        `Durasi minimal tidur (${form.min_sleep_hours} jam) tidak boleh melebihi total jendela tidur (${maxSleepAvailable} jam). Silakan perlebar jam tidur atau kurangi durasi minimal.`,
+      );
+      return;
+    }
+
     setSaving(true);
     setSaved(false);
     try {
@@ -168,8 +239,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 pb-12">
       <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-white">Pengaturan</h1>
@@ -179,7 +249,7 @@ export default function Settings() {
         </div>
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || isSleepInvalid}
           className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shrink-0"
         >
           {saving ? (
@@ -204,7 +274,11 @@ export default function Settings() {
           />
         </Field>
         <Field label="Email">
-          <input value={user?.email || ""} disabled className={`${inputCls} opacity-60`} />
+          <input
+            value={user?.email || ""}
+            disabled
+            className={`${inputCls} opacity-60`}
+          />
         </Field>
       </Section>
 
@@ -215,7 +289,7 @@ export default function Settings() {
             <input
               type="time"
               value={form.sleep_start}
-              onChange={(e) => set("sleep_start", e.target.value)}
+              onChange={(e) => handleTimeChange("sleep_start", e.target.value)}
               className={inputCls}
             />
           </Field>
@@ -223,22 +297,42 @@ export default function Settings() {
             <input
               type="time"
               value={form.sleep_end}
-              onChange={(e) => set("sleep_end", e.target.value)}
+              onChange={(e) => handleTimeChange("sleep_end", e.target.value)}
               className={inputCls}
             />
           </Field>
         </div>
-        <Field label={`Durasi Minimal Tidur · ${form.min_sleep_hours} jam`}>
-          <input
-            type="range"
-            min={4}
-            max={12}
-            step={0.5}
-            value={form.min_sleep_hours}
-            onChange={(e) => set("min_sleep_hours", e.target.value)}
-            className="w-full accent-indigo-500"
-          />
-        </Field>
+
+        <div
+          className={
+            isSleepInvalid
+              ? "bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg"
+              : ""
+          }
+        >
+          <Field label={`Durasi Minimal Tidur · ${form.min_sleep_hours} jam`}>
+            <input
+              type="range"
+              min={4}
+              max={12}
+              step={0.5}
+              value={form.min_sleep_hours}
+              onChange={(e) => set("min_sleep_hours", e.target.value)}
+              className="w-full accent-indigo-500"
+            />
+          </Field>
+          <div className="flex justify-between text-[10px] mt-1">
+            <span className="text-slate-500">
+              Jendela tidur saat ini: {maxSleepAvailable} jam
+            </span>
+            {isSleepInvalid && (
+              <span className="text-rose-400 font-bold flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Durasi minimal melebihi
+                jendela
+              </span>
+            )}
+          </div>
+        </div>
       </Section>
 
       {/* Pola Kerja */}
@@ -303,7 +397,8 @@ export default function Settings() {
         {presets.length > 0 && (
           <div>
             <p className="text-xs font-medium text-slate-300 mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Preset Persona
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Preset
+              Persona
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {presets.map((p) => (
