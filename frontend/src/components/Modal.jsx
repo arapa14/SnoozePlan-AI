@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom"; // <-- Tambahkan ini
 import { X } from "lucide-react";
 
 const SIZES = {
@@ -28,9 +29,10 @@ export default function Modal({
 
   if (!open) return null;
 
-  return (
+  // Bungkus return dengan createPortal
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose?.();
       }}
@@ -38,7 +40,7 @@ export default function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`bg-slate-900 border border-slate-800 w-full ${SIZES[size]} rounded-2xl shadow-2xl shadow-black/60 flex flex-col max-h-[90vh]`}
+        className={`bg-slate-900 border border-slate-800 w-full ${SIZES[size]} rounded-2xl shadow-2xl shadow-black/60 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200`}
       >
         {/* Header */}
         <div className="px-6 pt-5 pb-4 border-b border-slate-800 flex items-start gap-3">
@@ -67,6 +69,7 @@ export default function Modal({
         {/* Body */}
         <div className="px-6 py-5 overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body // <-- Render langsung ke body
   );
 }
