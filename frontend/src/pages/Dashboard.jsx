@@ -1,537 +1,406 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabaseClient";
-import axios from "axios";
-import {
-  Moon,
-  ShieldCheck,
-  RefreshCw,
-  Plus,
-  Clock,
-  LogOut,
-  X,
-  Loader2,
-  CalendarDays,
-} from "lucide-react";
+import { computePriorityScore, DEFAULT_WEIGHTS } from "../lib/priority";
+import TaskForm from "../components/TaskForm";
+import TaskCard from "../components/TaskCard";
+import { Plus, Moon, CalendarDays } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const CATEGORIES = [
+  { value: "all", label: "Semua" },
+  { value: "kuliah", label: "Kuliah" },
+  { value: "praktikum", label: "Praktikum" },
+  { value: "organisasi", label: "Organisasi" },
+  { value: "pribadi", label: "Pribadi" },
+];
+
+async function fetchDashboardData(userId) {
+  const [taskRes, prefsRes] = await Promise.all([
+    supabase
+      .from("tasks")
+      .select("*")
+      .eq("user_id", userId)
+      .is("archived_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("user_preferences")
+      .select("*")
+      .eq("user_id", userId)
+      .single(),
+  ]);
+  if (taskRes.error) throw taskRes.error;
+  return {
+    tasks: taskRes.data || [],
+    prefs: prefsRes.error ? null : prefsRes.data,
+  };
+}
+
+function weightsFromPrefs(prefs) {
+  if (!prefs) return DEFAULT_WEIGHTS;
+  return {
+    w_urgency: Number(prefs.w_urgency),
+    w_importance: Number(prefs.w_importance),
+    w_consequence: Number(prefs.w_consequence),
+    w_duration: Number(prefs.w_duration),
+    w_availability: Number(prefs.w_availability),
+  };
+}
 
 export default function Dashboard() {
-  const { user, profile, signOut } = useAuth();
-  const [tasks, setTasks] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isRescheduling, setIsRescheduling] = useState(false);
+  const { user } = useAuth();
+  const userId = user?.id;
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [taskForm, setTaskForm] = useState({
-    title: "",
-    category: "AKADEMIK",
-    estimated_minutes: 60,
-    deadline: "",
-    priority: "MEDIUM",
-  });
-  const [submittingTask, setSubmittingTask] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [prefs, setPrefs] = useState(null);
+  const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
+  const [now, setNow] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("active");
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
+    let cancelled = false;
 
-    let isMounted = true;
-
-    async function fetchDashboardData() {
-      setLoading(true);
-      try {
-        // 1. Ambil tugas aktif
-        const { data: taskData, error: taskError } = await supabase
-          .from("tasks")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("is_completed", false)
-          .order("deadline", { ascending: true });
-
-        if (taskError) throw taskError;
-
-        // 2. Ambil jadwal aktif
-        const { data: scheduleData, error: scheduleError } = await supabase
-          .from("schedules")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("start_time", { ascending: true });
-
-        if (scheduleError) throw scheduleError;
-
-        if (isMounted) {
-          setTasks(taskData || []);
-          setSchedules(scheduleData || []);
+    fetchDashboardData(userId)
+      .then((data) => {
+        if (cancelled) return;
+        setTasks(data.tasks);
+        if (data.prefs) {
+          setPrefs(data.prefs);
+          setWeights(weightsFromPrefs(data.prefs));
         }
-      } catch (err) {
-        console.error("Gagal memuat data dashboard:", err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchDashboardData();
+        setNow(Date.now());
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("Gagal memuat dashboard:", err);
+        setLoading(false);
+      });
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
-  // Fungsi helper terpisah jika butuh refresh manual (misal setelah tambah tugas / reschedule)
-  const refreshData = async () => {
-    if (!user) return;
+  const refreshData = useCallback(async () => {
+    if (!userId) return;
     try {
-      const [{ data: taskData }, { data: scheduleData }] = await Promise.all([
-        supabase
-          .from("tasks")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("is_completed", false)
-          .order("deadline", { ascending: true }),
-        supabase
-          .from("schedules")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("start_time", { ascending: true }),
-      ]);
-
-      if (taskData) setTasks(taskData);
-      if (scheduleData) setSchedules(scheduleData);
+      const data = await fetchDashboardData(userId);
+      setTasks(data.tasks);
+      if (data.prefs) {
+        setPrefs(data.prefs);
+        setWeights(weightsFromPrefs(data.prefs));
+      }
+      setNow(Date.now());
     } catch (err) {
-      console.error("Gagal memperbarui data:", err);
+      console.error("Gagal refresh:", err);
     }
+  }, [userId]);
+
+  const scoredTasks = useMemo(() => {
+    if (!now) return [];
+    return tasks
+      .map((t) => {
+        const { score, critical } = computePriorityScore(
+          t,
+          weights,
+          new Date(now),
+        );
+        return { ...t, score, critical }; 
+      })
+      .sort((a, b) => b.score - a.score);
+  }, [tasks, weights, now]);
+
+  const counts = useMemo(() => {
+    const active = scoredTasks.filter(
+      (t) => t.status === "todo" || t.status === "in_progress",
+    ).length;
+    const done = scoredTasks.filter((t) => t.status === "done").length;
+    return { active, done, all: scoredTasks.length };
+  }, [scoredTasks]);
+
+  const stats = useMemo(() => {
+    if (!now) return { overdue: 0, totalHours: 0 };
+    const active = scoredTasks.filter(
+      (t) => t.status !== "done" && t.status !== "cancelled",
+    );
+    const overdue = active.filter(
+      (t) => t.deadline && new Date(t.deadline).getTime() < now,
+    );
+    const totalMinutes = active.reduce(
+      (s, t) => s + (t.estimated_minutes || 0),
+      0,
+    );
+    return {
+      overdue: overdue.length,
+      totalHours: Math.round((totalMinutes / 60) * 10) / 10,
+    };
+  }, [scoredTasks, now]);
+
+  const visibleTasks = useMemo(
+    () =>
+      scoredTasks.filter((t) => {
+        if (filterCategory !== "all" && t.category !== filterCategory)
+          return false;
+        if (filterStatus === "active")
+          return t.status === "todo" || t.status === "in_progress";
+        if (filterStatus === "done") return t.status === "done";
+        return true;
+      }),
+    [scoredTasks, filterCategory, filterStatus],
+  );
+
+  const openNew = () => {
+    setEditingTask(null);
+    setFormOpen(true);
   };
 
-  // Handler Tambah Tugas
-  const handleCreateTask = async (e) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setSubmittingTask(true);
+  const handleCreateOrUpdate = async (payload) => {
+    if (!userId) return;
+    setSubmitting(true);
     try {
-      const payload = {
-        user_id: user.id,
-        title: taskForm.title,
-        category: taskForm.category,
-        estimated_minutes: parseInt(taskForm.estimated_minutes, 10),
-        deadline: new Date(taskForm.deadline).toISOString(),
-        priority: taskForm.priority,
-      };
+      const { score, factors } = computePriorityScore(payload, weights);
 
-      const { error } = await supabase.from("tasks").insert([payload]);
-      if (error) throw error;
+      if (editingTask) {
+        const { error } = await supabase
+          .from("tasks")
+          .update({
+            ...payload,
+            priority_score: score,
+            priority_factors: factors,
+            priority_computed_at: new Date().toISOString(),
+          })
+          .eq("id", editingTask.id)
+          .eq("user_id", userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("tasks").insert({
+          user_id: userId,
+          ...payload,
+          status: "todo",
+          priority_score: score,
+          priority_factors: factors,
+          priority_computed_at: new Date().toISOString(),
+        });
+        if (error) throw error;
+      }
 
-      setIsModalOpen(false);
-      setTaskForm({
-        title: "",
-        category: "AKADEMIK",
-        estimated_minutes: 60,
-        deadline: "",
-        priority: "MEDIUM",
-      });
+      setFormOpen(false);
+      setEditingTask(null);
       await refreshData();
     } catch (err) {
-      alert("Gagal menambahkan tugas: " + err.message);
+      alert("Gagal menyimpan tugas: " + err.message);
     } finally {
-      setSubmittingTask(false);
+      setSubmitting(false);
     }
   };
 
-  // Handler Trigger AI Reschedule
-  const handleTriggerReschedule = async () => {
-    if (!user) return;
-    setIsRescheduling(true);
-
-    try {
-      // Ambil jadwal tetap (misal kuliah yang terkunci)
-      const fixedSchedules = schedules.filter((s) => s.is_locked);
-
-      const res = await axios.post(`${API_URL}/reschedule/optimize`, {
-        profile: {
-          target_sleep_hours: profile?.target_sleep_hours || 7.0,
-          preferred_sleep_start: profile?.preferred_sleep_start || "23:00:00",
-        },
-        fixed_schedules: fixedSchedules,
-        tasks: tasks,
-      });
-
-      const optimizedBlocks = res.data.optimized_schedule;
-
-      if (Array.isArray(optimizedBlocks) && optimizedBlocks.length > 0) {
-        // Hapus jadwal lama yang tidak terkunci
-        await supabase
-          .from("schedules")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("is_locked", false);
-
-        // Masukkan slot jadwal baru hasil perhitungan Gemini
-        const newRows = optimizedBlocks.map((block) => ({
-          user_id: user.id,
-          task_id: block.task_id || null,
-          title: block.title,
-          category: block.category,
-          start_time: block.start_time,
-          end_time: block.end_time,
-          is_locked: block.is_sleep_guard,
-        }));
-
-        await supabase.from("schedules").insert(newRows);
-        await refreshData();
-        alert("Jadwal berhasil dioptimalkan oleh SnoozePlan AI!");
-      }
-    } catch (err) {
-      console.error("Gagal optimasi jadwal:", err);
-      alert(
-        "Gagal menyusun ulang jadwal via AI. Pastikan backend FastAPI aktif.",
-      );
-    } finally {
-      setIsRescheduling(false);
-    }
+  const handleToggle = async (task) => {
+    if (!userId) return;
+    const nextStatus = task.status === "done" ? "todo" : "done";
+    const { error } = await supabase
+      .from("tasks")
+      .update({ status: nextStatus })
+      .eq("id", task.id)
+      .eq("user_id", userId);
+    if (error) alert("Gagal memperbarui status: " + error.message);
+    else refreshData();
   };
 
-  const formatTimeSlot = (isoString) => {
-    if (!isoString) return "--:--";
-    try {
-      const date = new Date(isoString);
-      return date.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return isoString.slice(11, 16);
-    }
+  const handleDelete = async (task) => {
+    if (!userId) return;
+    if (
+      !confirm(
+        `Hapus tugas "${task.title}"? Riwayat tetap tercatat di task_events.`,
+      )
+    )
+      return;
+    const { error } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", task.id)
+      .eq("user_id", userId);
+    if (error) alert("Gagal menghapus: " + error.message);
+    else refreshData();
   };
+
+  const sleepStart = prefs?.sleep_start?.slice(0, 5) || "22:00";
+  const sleepEnd = prefs?.sleep_end?.slice(0, 5) || "06:00";
+
+  const TABS = [
+    { value: "active", label: "Aktif", count: counts.active },
+    { value: "done", label: "Selesai", count: counts.done },
+    { value: "all", label: "Semua", count: counts.all },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-12">
-      {/* Top Navigation */}
-      <nav className="border-b border-slate-900 bg-slate-900/60 backdrop-blur sticky top-0 z-20 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Moon className="w-5 h-5 text-indigo-400" />
-          <span className="font-bold tracking-tight text-white text-base">
-            SnoozePlan<span className="text-indigo-400"> AI</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-slate-400 hidden sm:inline">
-            {profile?.full_name || user?.email} ({profile?.prodi || "FMIPA UNJ"}
-            )
-          </span>
-          <button
-            onClick={signOut}
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-400 transition"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Keluar</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Main Container */}
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Banner Sleep-Guard */}
-        <div className="bg-gradient-to-r from-indigo-950/80 via-slate-900 to-slate-900 border border-indigo-900/40 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl shadow-black/20">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2.5 py-0.5 rounded-full">
-              <ShieldCheck className="w-3.5 h-3.5" /> Sleep-Guard Aktif
-            </div>
-            <h1 className="text-xl font-bold text-white">
-              Target Istirahat: {profile?.target_sleep_hours || 7.0} Jam
-            </h1>
-            <p className="text-xs text-slate-400 max-w-xl">
-              Batas tidur dikunci mulai pukul{" "}
-              {profile?.preferred_sleep_start || "23:00"}. AI secara otomatis
-              melarang penempatan tugas pada jam istirahat.
-            </p>
-          </div>
-          <button
-            onClick={handleTriggerReschedule}
-            disabled={isRescheduling}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-lg shadow-indigo-950 shrink-0"
-          >
-            {isRescheduling ? (
+    <div className="space-y-5">
+      {/* Header */}
+      <header className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            Tugas
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            {counts.active} aktif
+            {stats.overdue > 0 && (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Mengoptimalkan...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4" />
-                Rebalance Schedule (AI)
+                {" · "}
+                <span className="text-rose-400 font-medium">
+                  {stats.overdue} terlambat
+                </span>
               </>
             )}
+            {" · "}
+            {stats.totalHours} jam beban
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            to="/settings"
+            className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 bg-slate-900 border border-slate-800 hover:border-slate-700 px-2.5 py-1.5 rounded-lg transition tabular-nums"
+            title="Atur jam tidur di Pengaturan"
+          >
+            <Moon className="w-3 h-3 text-indigo-400" />
+            {sleepStart}–{sleepEnd}
+          </Link>
+          <button
+            onClick={openNew}
+            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition"
+          >
+            <Plus className="w-4 h-4" />
+            Tambah
           </button>
         </div>
+      </header>
 
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Kolom Kiri: Jadwal Hari Ini */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="font-semibold text-sm text-white flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-indigo-400" />
-                Timeline Kegiatan
-              </h2>
-              <span className="text-xs text-slate-500">
-                {new Date().toLocaleDateString("id-ID", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "short",
-                })}
-              </span>
-            </div>
-
-            <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 divide-y divide-slate-800 space-y-3">
-              {loading ? (
-                <div className="py-12 flex justify-center text-slate-500 text-xs">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Memuat
-                  timeline...
-                </div>
-              ) : schedules.length === 0 ? (
-                <div className="text-center py-12 text-xs text-slate-500">
-                  Belum ada jadwal tersinkronisasi. Klik{" "}
-                  <strong>"Rebalance Schedule"</strong> agar AI memetakan tugas
-                  ke slot bebas Anda.
-                </div>
-              ) : (
-                schedules.map((item) => (
-                  <div
-                    key={item.id}
-                    className="pt-3 first:pt-0 flex items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                          item.category === "TIDUR" ||
-                          item.category === "ISTIRAHAT"
-                            ? "bg-purple-500 ring-2 ring-purple-500/20"
-                            : item.category === "AKADEMIK"
-                              ? "bg-sky-500 ring-2 ring-sky-500/20"
-                              : "bg-amber-500 ring-2 ring-amber-500/20"
-                        }`}
-                      />
-                      <div className="truncate">
-                        <p className="text-sm font-medium text-white truncate">
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {formatTimeSlot(item.start_time)} -{" "}
-                          {formatTimeSlot(item.end_time)}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${
-                        item.category === "TIDUR"
-                          ? "bg-purple-950/80 text-purple-300 border border-purple-800"
-                          : "bg-slate-800 text-slate-300"
-                      }`}
-                    >
-                      {item.category}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Kolom Kanan: Tugas Aktif */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="font-semibold text-sm text-white">Tugas Aktif</h2>
+      {/* Filters */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="inline-flex items-center gap-0.5 bg-slate-900 border border-slate-800 rounded-lg p-1">
+          {TABS.map((t) => {
+            const active = filterStatus === t.value;
+            return (
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium transition"
+                key={t.value}
+                onClick={() => setFilterStatus(t.value)}
+                className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-md transition ${
+                  active
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" /> Tambah
+                {t.label}
+                <span
+                  className={`text-[10px] tabular-nums ${
+                    active ? "text-indigo-400" : "text-slate-600"
+                  }`}
+                >
+                  {t.count}
+                </span>
               </button>
-            </div>
-
-            <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 space-y-3">
-              {loading ? (
-                <div className="py-8 flex justify-center text-slate-500 text-xs">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Memuat
-                  tugas...
-                </div>
-              ) : tasks.length === 0 ? (
-                <div className="text-center py-8 text-xs text-slate-500">
-                  Tidak ada tugas menumpuk saat ini.
-                </div>
-              ) : (
-                tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="bg-slate-950/80 border border-slate-800/80 p-3 rounded-lg space-y-2 hover:border-slate-700 transition"
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <p className="text-xs font-medium text-slate-200 line-clamp-2">
-                        {task.title}
-                      </p>
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                          task.priority === "CRITICAL"
-                            ? "bg-red-950 text-red-400 border border-red-900"
-                            : task.priority === "HIGH"
-                              ? "bg-amber-950 text-amber-400 border border-amber-900"
-                              : "bg-slate-800 text-slate-400"
-                        }`}
-                      >
-                        {task.priority}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {task.estimated_minutes}{" "}
-                        mnt
-                      </span>
-                      <span>
-                        {new Date(task.deadline).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+            );
+          })}
         </div>
-      </main>
 
-      {/* Modal Input Tugas Baru */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold text-white">
-                Tambah Tugas Baru
-              </h3>
+        <div className="flex items-center gap-0.5 flex-wrap">
+          {CATEGORIES.map((c) => {
+            const active = filterCategory === c.value;
+            return (
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white transition"
+                key={c.value}
+                onClick={() => setFilterCategory(c.value)}
+                className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition ${
+                  active
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
               >
-                <X className="w-4 h-4" />
+                {c.label}
               </button>
-            </div>
-
-            <form onSubmit={handleCreateTask} className="space-y-4">
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">
-                  Judul Tugas / Modul
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="cth. Laporan Praktikum Fisika Dasar"
-                  value={taskForm.title}
-                  onChange={(e) =>
-                    setTaskForm({ ...taskForm, title: e.target.value })
-                  }
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">
-                    Kategori
-                  </label>
-                  <select
-                    value={taskForm.category}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, category: e.target.value })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="AKADEMIK">Akademik</option>
-                    <option value="ORGANISASI">Organisasi</option>
-                    <option value="PRIBADI">Pribadi</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">
-                    Prioritas
-                  </label>
-                  <select
-                    value={taskForm.priority}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, priority: e.target.value })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="CRITICAL">Critical</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">
-                    Estimasi (Menit)
-                  </label>
-                  <input
-                    type="number"
-                    min="15"
-                    step="15"
-                    required
-                    value={taskForm.estimated_minutes}
-                    onChange={(e) =>
-                      setTaskForm({
-                        ...taskForm,
-                        estimated_minutes: e.target.value,
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">
-                    Deadline
-                  </label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={taskForm.deadline}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, deadline: e.target.value })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-3 py-2 text-xs text-slate-400 hover:text-white rounded-lg transition"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingTask}
-                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium text-xs px-4 py-2 rounded-lg transition flex items-center gap-1.5"
-                >
-                  {submittingTask && (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  )}
-                  Simpan Tugas
-                </button>
-              </div>
-            </form>
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
+
+      {/* List */}
+      <div className="space-y-2">
+        {loading ? (
+          <LoadingState />
+        ) : visibleTasks.length === 0 ? (
+          <EmptyState onCreate={openNew} />
+        ) : (
+          visibleTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              score={task.score}
+              critical={task.critical}
+              now={now}
+              onToggle={handleToggle}
+              onEdit={(t) => {
+                setEditingTask(t);
+                setFormOpen(true);
+              }}
+              onDelete={handleDelete}
+            />
+          ))
+        )}
+      </div>
+
+      <TaskForm
+        key={`form-${editingTask?.id ?? "new"}`}
+        open={formOpen}
+        initialTask={editingTask}
+        onClose={() => {
+          setFormOpen(false);
+          setEditingTask(null);
+        }}
+        onSubmit={handleCreateOrUpdate}
+        submitting={submitting}
+      />
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="space-y-2">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="h-16 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"
+        />
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ onCreate }) {
+  return (
+    <div className="bg-slate-900 border border-slate-800 border-dashed rounded-xl p-12 text-center">
+      <div className="w-12 h-12 bg-slate-800/60 rounded-full flex items-center justify-center mx-auto mb-3">
+        <CalendarDays className="w-5 h-5 text-slate-600" />
+      </div>
+      <p className="text-sm font-medium text-slate-300 mb-1">Belum ada tugas</p>
+      <p className="text-xs text-slate-500 mb-4">
+        Mulai dengan menambahkan tugas pertama Anda.
+      </p>
+      <button
+        onClick={onCreate}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
+      >
+        <Plus className="w-3.5 h-3.5" />
+        Tambah tugas
+      </button>
     </div>
   );
 }
