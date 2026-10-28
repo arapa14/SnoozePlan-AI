@@ -388,6 +388,7 @@ export default function Dashboard() {
           </Link>
 
           <button
+            id="tour-add-task"
             onClick={openNew}
             className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition"
           >
@@ -440,7 +441,7 @@ export default function Dashboard() {
       </div>
 
       {/* LIST TUGAS */}
-      <div className="space-y-2">
+      <div id="tour-task-list" className="space-y-2">
         {loading ? (
           <LoadingState />
         ) : visibleTasks.length === 0 ? (
@@ -465,7 +466,7 @@ export default function Dashboard() {
       </div>
 
       {/* TIMELINE SECTION */}
-      <section className="pt-6 border-t border-slate-800">
+      <section id="tour-timeline" className="pt-6 border-t border-slate-800">
         {/* HEADER TIMELINE (Tombol Overdue & Jadwalkan tetap di sini) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
@@ -480,7 +481,10 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer bg-slate-900 px-3 py-2 rounded-lg border border-slate-800 hover:border-slate-700 transition">
+            <label
+              id="tour-overdue-toggle"
+              className="flex items-center gap-2 cursor-pointer bg-slate-900 px-3 py-2 rounded-lg border border-slate-800 hover:border-slate-700 transition"
+            >
               <input
                 type="checkbox"
                 checked={includeOverdue}
@@ -493,6 +497,7 @@ export default function Dashboard() {
             </label>
 
             <button
+              id="tour-generate-btn"
               onClick={handleGenerate}
               disabled={!canGenerate}
               className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition"

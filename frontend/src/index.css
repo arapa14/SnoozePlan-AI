@@ -1,1 +1,118 @@
 @import "tailwindcss";
+/* =========================================
+   DRIVER.JS PREMIUM DARK THEME
+   ========================================= */
+
+.driver-premium-theme {
+  background-color: #0f172a !important; /* bg-slate-900 */
+  border: 1px solid #334155 !important; /* border-slate-700 */
+  border-radius: 12px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; /* Bayangan tebal */
+  padding: 20px !important;
+  max-width: 340px !important;
+  font-family: inherit !important;
+}
+
+/* Sembunyikan panah bawaan */
+.driver-popover-arrow {
+  display: none !important;
+}
+
+/* Tombol Close (X) di pojok kanan atas */
+.driver-premium-theme .driver-popover-close-btn {
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  color: #64748b !important; /* slate-500 */
+  background: transparent !important;
+  border-radius: 4px !important;
+  transition: all 0.2s !important;
+}
+.driver-premium-theme .driver-popover-close-btn:hover {
+  color: #f8fafc !important; /* slate-50 */
+  background: #1e293b !important; /* slate-800 */
+}
+
+/* Judul Popover */
+.driver-premium-theme .driver-popover-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #f8fafc !important; /* slate-50 */
+  margin-bottom: 8px !important;
+  padding-right: 24px !important; /* Hindari tabrakan dengan tombol X */
+}
+
+/* Deskripsi Popover */
+.driver-premium-theme .driver-popover-description {
+  font-size: 13px !important;
+  color: #94a3b8 !important; /* slate-400 */
+  line-height: 1.6 !important;
+  margin-bottom: 20px !important;
+}
+
+/* Footer (Progress & Tombol) */
+.driver-premium-theme .driver-popover-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-top: 16px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid #1e293b !important; /* Garis pemisah halus */
+}
+
+/* Teks Progress (1/5) */
+.driver-premium-theme .driver-popover-progress-text {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #6366f1 !important; /* indigo-500 */
+  background: rgba(99, 102, 241, 0.1) !important; /* indigo-500/10 */
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+}
+
+/* Container Tombol */
+.driver-premium-theme .driver-popover-navigation-btns {
+  display: flex !important;
+  gap: 8px !important;
+}
+
+/* Base Tombol */
+.driver-premium-theme button {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  text-shadow: none !important;
+  transition: all 0.2s !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Tombol Lanjut (Primary) */
+.driver-premium-theme .driver-popover-next-btn {
+  background-color: #4f46e5 !important; /* indigo-600 */
+  color: #ffffff !important;
+  border: none !important;
+}
+.driver-premium-theme .driver-popover-next-btn:hover {
+  background-color: #6366f1 !important; /* indigo-500 */
+  transform: translateY(-1px) !important; /* Efek terangkat */
+}
+
+/* Tombol Kembali (Secondary) */
+.driver-premium-theme .driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: #cbd5e1 !important; /* slate-300 */
+  border: 1px solid #334155 !important; /* slate-700 */
+}
+.driver-premium-theme .driver-popover-prev-btn:hover {
+  background-color: #1e293b !important; /* slate-800 */
+  color: #f8fafc !important;
+}
