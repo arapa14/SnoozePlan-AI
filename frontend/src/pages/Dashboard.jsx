@@ -222,8 +222,41 @@ export default function Dashboard() {
     setFormOpen(true);
   };
 
+  const checkSleepConflict = (startStr, endStr) => {
+    if (!startStr || !endStr || !prefs) return false;
+    const s = new Date(startStr);
+    const e = new Date(endStr);
+    const [sh, sm] = (prefs.sleep_start || "22:00").split(":").map(Number);
+    const [eh, em] = (prefs.sleep_end || "06:00").split(":").map(Number);
+
+    // Cek di hari sebelum, hari H, dan hari setelahnya (karena tidur bisa lewat tengah malam)
+    for (let dayOffset = -1; dayOffset <= 1; dayOffset++) {
+      const day = new Date(s);
+      day.setDate(day.getDate() + dayOffset);
+      day.setHours(0, 0, 0, 0);
+
+      const ws = new Date(day);
+      ws.setHours(sh, sm, 0, 0);
+      const we = new Date(day);
+      we.setHours(eh, em, 0, 0);
+      if (we <= ws) we.setDate(we.getDate() + 1); // Tidur lewat tengah malam
+
+      if (s < we && e > ws) return true; // Ada irisan waktu
+    }
+    return false;
+  };
+
   const handleCreateOrUpdate = async (payload) => {
     if (!userId) return;
+
+    // VALIDASI SLEEP-GUARD UNTUK AGENDA TETAP
+    if (payload.fixed_start_at && payload.fixed_end_at) {
+      if (checkSleepConflict(payload.fixed_start_at, payload.fixed_end_at)) {
+        alert("Gagal: Agenda Tetap tidak boleh diletakkan di dalam zona jam tidur Anda.");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const { score, factors } = computePriorityScore(payload, weights);
