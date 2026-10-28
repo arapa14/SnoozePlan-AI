@@ -27,16 +27,6 @@ export function startTour() {
 
     steps: [
         {
-          element: "#tour-task-list",
-          popover: {
-            title: `<div style="display:flex; align-items:center; gap:8px;">${icons.list} <span>Daftar Prioritas</span></div>`,
-            description:
-              "Tugas Anda diurutkan secara otomatis berdasarkan skor prioritas. Tugas yang paling kritis akan selalu berada di paling atas.",
-            side: "top",
-            align: "start",
-          },
-        },
-      {
         element: "#tour-add-task",
         popover: {
           title: `<div style="display:flex; align-items:center; gap:8px;">${icons.plus} <span>Tambah Tugas</span></div>`,
@@ -46,6 +36,16 @@ export function startTour() {
           align: "end",
         },
       },
+        {
+          element: "#tour-task-list",
+          popover: {
+            title: `<div style="display:flex; align-items:center; gap:8px;">${icons.list} <span>Daftar Prioritas</span></div>`,
+            description:
+              "Tugas Anda diurutkan secara otomatis berdasarkan skor prioritas. Tugas yang paling kritis akan selalu berada di paling atas.",
+            side: "top",
+            align: "start",
+          },
+        },
       {
         element: "#tour-timeline",
         popover: {
