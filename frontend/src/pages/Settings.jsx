@@ -283,7 +283,7 @@ export default function Settings() {
       </Section>
 
       {/* Sleep-Guard */}
-      <Section icon={Moon} title="Jam Tidur (Sleep-Guard)">
+      {/* <Section icon={Moon} title="Jam Tidur (Sleep-Guard)">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Mulai Tidur">
             <input
@@ -333,7 +333,7 @@ export default function Settings() {
             )}
           </div>
         </div>
-      </Section>
+      </Section> */}
 
       {/* Pola Kerja */}
       <Section icon={Sun} title="Jam Aktif & Pola Kerja">
