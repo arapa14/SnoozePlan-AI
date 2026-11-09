@@ -9,6 +9,7 @@ export default function NotificationSettings() {
   const [enabled, setEnabled] = useState(false);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
   const supported = typeof window !== "undefined" && "Notification" in window;
   const denied = supported && Notification.permission === "denied";
@@ -21,19 +22,32 @@ export default function NotificationSettings() {
       setEnabled(!!OneSignal.User.PushSubscription.optedIn);
       setReady(true);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [supported]);
 
   const toggle = async () => {
     setBusy(true);
+    setMessage("");
     try {
       if (enabled) {
         await disablePush();
         setEnabled(false);
       } else {
         await enablePush(user.id);
-        setEnabled(!!OneSignal.User.PushSubscription.optedIn);
+        const on = !!OneSignal.User.PushSubscription.optedIn;
+        setEnabled(on);
+        if (!on)
+          setMessage(
+            "Izin belum diberikan. Klik Aktifkan lagi lalu pilih Izinkan.",
+          );
       }
+    } catch (err) {
+      console.error(err);
+      setMessage(
+        "Izin notifikasi tidak diberikan. Coba lagi dan pilih Izinkan pada dialog browser.",
+      );
     } finally {
       setBusy(false);
     }
@@ -54,10 +68,13 @@ export default function NotificationSettings() {
       </p>
 
       {!supported ? (
-        <p className="text-[11px] text-warn">Browser ini tidak mendukung notifikasi.</p>
+        <p className="text-[11px] text-warn">
+          Browser ini tidak mendukung notifikasi.
+        </p>
       ) : denied ? (
         <p className="text-[11px] text-warn bg-warn/10 border border-warn/20 rounded-md px-2.5 py-1.5">
-          Izin notifikasi diblokir. Aktifkan lewat ikon gembok di address bar, lalu muat ulang halaman.
+          Izin notifikasi diblokir. Aktifkan lewat ikon gembok di address bar,
+          lalu muat ulang halaman.
         </p>
       ) : (
         <button
@@ -69,10 +86,20 @@ export default function NotificationSettings() {
               : "bg-mint hover:bg-pale text-canvas"
           }`}
         >
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : enabled ? <BellOff className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+          {busy ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : enabled ? (
+            <BellOff className="w-3.5 h-3.5" />
+          ) : (
+            <Bell className="w-3.5 h-3.5" />
+          )}
           {enabled ? "Matikan notifikasi" : "Aktifkan notifikasi"}
         </button>
+      )}
+      {message && (
+        <p className="text-[11px] text-warn bg-warn/10 border border-warn/20 rounded-md px-2.5 py-1.5">
+          {message}
+        </p>
       )}
     </section>
   );
