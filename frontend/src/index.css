@@ -1,24 +1,111 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
-/* =========================================
-   DRIVER.JS PREMIUM DARK THEME
-   ========================================= */
 
+/* =========================================
+   DESIGN TOKENS — SnoozePlan "Mint Night"
+   Palet dasar : #F2FFF9 #C9F2E2 #7ED9B7 #2E9C7C #1F4B3E
+   Permukaan gelap diturunkan dari #1F4B3E (hijau malam).
+   ========================================= */
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Permukaan (gelap → terang) */
+  --color-canvas: #0a1f1a; /* latar halaman, input */
+  --color-surface: #0f2a23; /* kartu, sidebar, modal */
+  --color-raised: #14362b; /* hover, tab aktif, chip */
+  --color-line: #1f4b3e; /* border (palet) */
+  --color-line-strong: #2b6a58; /* border hover / penekanan */
+
+  /* Aksen (palet) */
+  --color-brand: #2e9c7c;
+  --color-mint: #7ed9b7; /* aksi utama, fokus */
+  --color-pale: #c9f2e2; /* hover aksi utama */
+
+  /* Teks */
+  --color-ink: #f2fff9; /* judul */
+  --color-ink-2: #b4d9ca; /* isi */
+  --color-ink-3: #82ab9b; /* keterangan */
+  --color-ink-4: #5b8272; /* placeholder, ikon redup */
+
+  /* Status (fungsional, tidak boleh hijau agar tetap terbaca sebagai peringatan) */
+  --color-danger: #f28b82;
+  --color-warn: #f0c36a;
+  --color-info: #7cc4e8;
+  --color-lilac: #b7a6f0;
+  --color-ember: #f0a070;
+
+  --animate-pop: pop 0.18s ease-out;
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    background-color: var(--color-canvas);
+  }
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-mint);
+    color: var(--color-canvas);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-mint);
+    outline-offset: 2px;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* =========================================
+   DRIVER.JS — tema popover tur
+   ========================================= */
 .driver-premium-theme {
-  background-color: #0f172a !important; /* bg-slate-900 */
-  border: 1px solid #334155 !important; /* border-slate-700 */
-  border-radius: 12px !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; /* Bayangan tebal */
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-line-strong) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
   padding: 20px !important;
   max-width: 340px !important;
   font-family: inherit !important;
 }
 
-/* Sembunyikan panah bawaan */
 .driver-popover-arrow {
   display: none !important;
 }
 
-/* Tombol Close (X) di pojok kanan atas */
 .driver-premium-theme .driver-popover-close-btn {
   position: absolute !important;
   top: 16px !important;
@@ -29,60 +116,54 @@
   align-items: center !important;
   justify-content: center !important;
   font-size: 18px !important;
-  color: #64748b !important; /* slate-500 */
+  color: var(--color-ink-3) !important;
   background: transparent !important;
-  border-radius: 4px !important;
+  border-radius: 6px !important;
   transition: all 0.2s !important;
 }
 .driver-premium-theme .driver-popover-close-btn:hover {
-  color: #f8fafc !important; /* slate-50 */
-  background: #1e293b !important; /* slate-800 */
+  color: var(--color-ink) !important;
+  background: var(--color-raised) !important;
 }
 
-/* Judul Popover */
 .driver-premium-theme .driver-popover-title {
   font-size: 15px !important;
-  font-weight: 600 !important;
-  color: #f8fafc !important; /* slate-50 */
+  font-weight: 700 !important;
+  color: var(--color-ink) !important;
   margin-bottom: 8px !important;
-  padding-right: 24px !important; /* Hindari tabrakan dengan tombol X */
+  padding-right: 24px !important;
 }
 
-/* Deskripsi Popover */
 .driver-premium-theme .driver-popover-description {
   font-size: 13px !important;
-  color: #94a3b8 !important; /* slate-400 */
+  color: var(--color-ink-2) !important;
   line-height: 1.6 !important;
   margin-bottom: 20px !important;
 }
 
-/* Footer (Progress & Tombol) */
 .driver-premium-theme .driver-popover-footer {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   margin-top: 16px !important;
   padding-top: 16px !important;
-  border-top: 1px solid #1e293b !important; /* Garis pemisah halus */
+  border-top: 1px solid var(--color-line) !important;
 }
 
-/* Teks Progress (1/5) */
 .driver-premium-theme .driver-popover-progress-text {
   font-size: 12px !important;
-  font-weight: 500 !important;
-  color: #6366f1 !important; /* indigo-500 */
-  background: rgba(99, 102, 241, 0.1) !important; /* indigo-500/10 */
+  font-weight: 600 !important;
+  color: var(--color-mint) !important;
+  background: rgba(126, 217, 183, 0.1) !important;
   padding: 4px 8px !important;
   border-radius: 6px !important;
 }
 
-/* Container Tombol */
 .driver-premium-theme .driver-popover-navigation-btns {
   display: flex !important;
   gap: 8px !important;
 }
 
-/* Base Tombol */
 .driver-premium-theme button {
   font-size: 12px !important;
   font-weight: 600 !important;
@@ -95,24 +176,21 @@
   align-items: center !important;
 }
 
-/* Tombol Lanjut (Primary) */
 .driver-premium-theme .driver-popover-next-btn {
-  background-color: #4f46e5 !important; /* indigo-600 */
-  color: #ffffff !important;
+  background-color: var(--color-mint) !important;
+  color: var(--color-canvas) !important;
   border: none !important;
 }
 .driver-premium-theme .driver-popover-next-btn:hover {
-  background-color: #6366f1 !important; /* indigo-500 */
-  transform: translateY(-1px) !important; /* Efek terangkat */
+  background-color: var(--color-pale) !important;
 }
 
-/* Tombol Kembali (Secondary) */
 .driver-premium-theme .driver-popover-prev-btn {
   background-color: transparent !important;
-  color: #cbd5e1 !important; /* slate-300 */
-  border: 1px solid #334155 !important; /* slate-700 */
+  color: var(--color-ink-2) !important;
+  border: 1px solid var(--color-line-strong) !important;
 }
 .driver-premium-theme .driver-popover-prev-btn:hover {
-  background-color: #1e293b !important; /* slate-800 */
-  color: #f8fafc !important;
+  background-color: var(--color-raised) !important;
+  color: var(--color-ink) !important;
 }

@@ -13,13 +13,41 @@ import {
 } from "lucide-react";
 
 const EVENT_META = {
-  created: { icon: Plus, tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", label: "Dibuat" },
-  updated: { icon: Pencil, tone: "text-sky-400 bg-sky-500/10 border-sky-500/20", label: "Diperbarui" },
-  status_changed: { icon: RotateCcw, tone: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20", label: "Status berubah" },
-  completed: { icon: CheckCircle2, tone: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", label: "Selesai" },
-  reopened: { icon: RotateCcw, tone: "text-amber-400 bg-amber-500/10 border-amber-500/20", label: "Dibuka kembali" },
-  snoozed: { icon: Bell, tone: "text-purple-400 bg-purple-500/10 border-purple-500/20", label: "Ditunda" },
-  deleted: { icon: Trash2, tone: "text-rose-400 bg-rose-500/10 border-rose-500/20", label: "Dihapus" },
+  created: {
+    icon: Plus,
+    tone: "text-mint bg-mint/10 border-mint/20",
+    label: "Dibuat",
+  },
+  updated: {
+    icon: Pencil,
+    tone: "text-info bg-info/10 border-info/20",
+    label: "Diperbarui",
+  },
+  status_changed: {
+    icon: RotateCcw,
+    tone: "text-pale bg-pale/10 border-pale/20",
+    label: "Status berubah",
+  },
+  completed: {
+    icon: CheckCircle2,
+    tone: "text-mint bg-mint/10 border-mint/20",
+    label: "Selesai",
+  },
+  reopened: {
+    icon: RotateCcw,
+    tone: "text-warn bg-warn/10 border-warn/20",
+    label: "Dibuka kembali",
+  },
+  snoozed: {
+    icon: Bell,
+    tone: "text-lilac bg-lilac/10 border-lilac/20",
+    label: "Ditunda",
+  },
+  deleted: {
+    icon: Trash2,
+    tone: "text-danger bg-danger/10 border-danger/20",
+    label: "Dihapus",
+  },
 };
 
 function dayLabel(iso, nowMs) {
@@ -90,21 +118,21 @@ export default function History() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-xl font-bold text-white">Riwayat</h1>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <h1 className="text-xl font-bold text-ink">Riwayat</h1>
+        <p className="text-xs text-ink-3 mt-0.5">
           Catatan perubahan tugas yang tercatat otomatis oleh sistem.
         </p>
       </header>
 
       {loading ? (
-        <div className="py-16 flex justify-center text-slate-500 text-xs">
+        <div className="py-16 flex justify-center text-ink-3 text-xs">
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Memuat riwayat...
         </div>
       ) : grouped.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
-          <HistoryIcon className="w-8 h-8 text-slate-700 mx-auto mb-3" />
-          <p className="text-sm text-slate-400">Belum ada riwayat.</p>
-          <p className="text-xs text-slate-600 mt-1">
+        <div className="bg-surface border border-line rounded-xl p-10 text-center">
+          <HistoryIcon className="w-8 h-8 text-ink-4 mx-auto mb-3" />
+          <p className="text-sm text-ink-2">Belum ada riwayat.</p>
+          <p className="text-xs text-ink-4 mt-1">
             Aktivitas tugas Anda akan tampil di sini.
           </p>
         </div>
@@ -112,21 +140,21 @@ export default function History() {
         <div className="space-y-6">
           {grouped.map(({ label, items }) => (
             <section key={label}>
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-1">
+              <h2 className="text-xs font-semibold text-ink-3 uppercase tracking-wider mb-2 px-1">
                 {label}
               </h2>
-              <div className="bg-slate-900 border border-slate-800 rounded-xl divide-y divide-slate-800">
+              <div className="bg-surface border border-line rounded-xl divide-y divide-line">
                 {items.map((ev) => {
                   const meta = EVENT_META[ev.event_type] || EVENT_META.updated;
                   const Icon = meta.icon;
                   const time = new Date(ev.created_at).toLocaleTimeString(
                     "id-ID",
-                    { hour: "2-digit", minute: "2-digit" }
+                    { hour: "2-digit", minute: "2-digit" },
                   );
                   return (
                     <div
                       key={ev.id}
-                      className="p-3.5 flex items-start gap-3 hover:bg-slate-800/30 transition"
+                      className="p-3.5 flex items-start gap-3 hover:bg-raised/30 transition"
                     >
                       <div
                         className={`p-1.5 rounded-md border shrink-0 ${meta.tone}`}
@@ -135,15 +163,15 @@ export default function History() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-2">
-                          <p className="text-sm font-medium text-slate-100 truncate">
+                          <p className="text-sm font-medium text-ink truncate">
                             {ev.task_title}
                           </p>
-                          <span className="text-[10px] text-slate-500 tabular-nums shrink-0">
+                          <span className="text-[10px] text-ink-3 tabular-nums shrink-0">
                             {time}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          <span className="text-slate-400">{meta.label}</span>
+                        <p className="text-[11px] text-ink-3 mt-0.5">
+                          <span className="text-ink-2">{meta.label}</span>
                           {describeChange(ev) && (
                             <>
                               {" · "}
@@ -151,9 +179,7 @@ export default function History() {
                             </>
                           )}
                           {" · "}
-                          <span className="text-slate-600">
-                            oleh {ev.actor}
-                          </span>
+                          <span className="text-ink-4">oleh {ev.actor}</span>
                         </p>
                       </div>
                     </div>

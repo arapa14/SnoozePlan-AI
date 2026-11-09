@@ -20,6 +20,10 @@ import {
   Check,
   X,
   ArrowRightLeft,
+  ListTodo,
+  CheckCircle2,
+  Clock,
+  Flame,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -159,12 +163,17 @@ export default function Dashboard() {
   }, [tasks, weights, now]);
 
   const counts = useMemo(() => {
-    const active = scoredTasks.filter(
-      (t) => t.status === "todo" || t.status === "in_progress",
-    ).length;
+    const isActive = (t) => t.status === "todo" || t.status === "in_progress";
+    const active = scoredTasks.filter(isActive).length;
     const done = scoredTasks.filter((t) => t.status === "done").length;
-    return { active, done, all: scoredTasks.length };
-  }, [scoredTasks]);
+    const overdue = now
+      ? scoredTasks.filter(
+          (t) => isActive(t) && t.deadline && new Date(t.deadline).getTime() < now,
+        ).length
+      : 0;
+    const critical = scoredTasks.filter((t) => isActive(t) && t.critical).length;
+    return { active, done, overdue, critical, all: scoredTasks.length };
+  }, [scoredTasks, now]);
 
   const visibleTasks = useMemo(
     () =>
@@ -404,51 +413,65 @@ export default function Dashboard() {
       {/* HEADER UTAMA */}
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-ink tracking-tight">
             Tugas & Agenda
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            {counts.active} aktif · {counts.done} selesai
+          <p className="text-xs text-ink-3 mt-1">
+            {now
+              ? new Date(now).toLocaleDateString("id-ID", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                })
+              : ""}
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             to="/settings"
-            className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-400 bg-slate-900 border border-slate-800 hover:border-slate-700 px-2.5 py-1.5 rounded-lg transition tabular-nums"
+            className="hidden sm:flex items-center gap-1.5 text-[11px] text-ink-2 bg-surface border border-line hover:border-line-strong px-2.5 py-1.5 rounded-lg transition tabular-nums"
           >
-            <Moon className="w-3 h-3 text-indigo-400" /> {sleepStart}–{sleepEnd}
+            <Moon className="w-3 h-3 text-mint" /> {sleepStart}–{sleepEnd}
           </Link>
 
           <button
             id="tour-add-task"
             onClick={openNew}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition"
+            className="flex items-center gap-1.5 bg-mint hover:bg-pale text-canvas text-xs font-semibold px-3.5 py-2 rounded-lg transition"
           >
             <Plus className="w-4 h-4" /> Tambah
           </button>
         </div>
       </header>
 
+      {/* RINGKASAN */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <StatCard label="Aktif" value={counts.active} icon={ListTodo} tone="mint" />
+        <StatCard label="Selesai" value={counts.done} icon={CheckCircle2} tone="info" />
+        <StatCard label="Terlambat" value={counts.overdue} icon={Clock} tone="warn" />
+        <StatCard label="Kritis" value={counts.critical} icon={Flame} tone="danger" />
+      </div>
+
       {/* FILTERS */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="inline-flex items-center gap-0.5 bg-slate-900 border border-slate-800 rounded-lg p-1">
+        <div className="inline-flex items-center gap-0.5 bg-surface border border-line rounded-lg p-1">
           {TABS.map((t) => (
             <button
               key={t.value}
               onClick={() => setFilterStatus(t.value)}
               className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-md transition ${
                 filterStatus === t.value
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-raised text-ink"
+                  : "text-ink-2 hover:text-ink"
               }`}
             >
               {t.label}{" "}
               <span
                 className={`text-[10px] tabular-nums ${
                   filterStatus === t.value
-                    ? "text-indigo-400"
-                    : "text-slate-600"
+                    ? "text-mint"
+                    : "text-ink-4"
                 }`}
               >
                 {t.count}
@@ -463,8 +486,8 @@ export default function Dashboard() {
               onClick={() => setFilterCategory(c.value)}
               className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition ${
                 filterCategory === c.value
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-500 hover:text-slate-300"
+                  ? "bg-raised text-ink"
+                  : "text-ink-3 hover:text-ink-2"
               }`}
             >
               {c.label}
@@ -499,14 +522,14 @@ export default function Dashboard() {
       </div>
 
       {/* TIMELINE SECTION */}
-      <section id="tour-timeline" className="pt-6 border-t border-slate-800">
+      <section id="tour-timeline" className="pt-6 border-t border-line">
         {/* HEADER TIMELINE (Tombol Overdue & Jadwalkan tetap di sini) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <CalendarClock className="w-4 h-4 text-indigo-400" /> Timeline
+            <h2 className="text-sm font-bold text-ink flex items-center gap-2">
+              <CalendarClock className="w-4 h-4 text-mint" /> Timeline
             </h2>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-ink-3 mt-0.5">
               {activePlan
                 ? `Jadwal aktif · ${new Date(activePlan.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
                 : "Jadwal kerja 7 hari ke depan"}
@@ -516,15 +539,15 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <label
               id="tour-overdue-toggle"
-              className="flex items-center gap-2 cursor-pointer bg-slate-900 px-3 py-2 rounded-lg border border-slate-800 hover:border-slate-700 transition"
+              className="flex items-center gap-2 cursor-pointer bg-surface px-3 py-2 rounded-lg border border-line hover:border-line-strong transition"
             >
               <input
                 type="checkbox"
                 checked={includeOverdue}
                 onChange={(e) => setIncludeOverdue(e.target.checked)}
-                className="w-3.5 h-3.5 accent-indigo-500 rounded border-slate-700 bg-slate-800"
+                className="w-3.5 h-3.5 accent-mint rounded border-line-strong bg-raised"
               />
-              <span className="text-[11px] text-slate-300 font-medium select-none hidden sm:inline">
+              <span className="text-[11px] text-ink-2 font-medium select-none hidden sm:inline">
                 Sertakan Terlambat
               </span>
             </label>
@@ -533,7 +556,7 @@ export default function Dashboard() {
               id="tour-generate-btn"
               onClick={handleGenerate}
               disabled={!canGenerate}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition"
+              className="flex items-center gap-1.5 bg-mint/10 hover:bg-mint/20 border border-mint/30 disabled:opacity-50 text-mint text-xs font-semibold px-3.5 py-2 rounded-lg transition"
             >
               <RefreshCw
                 className={`w-4 h-4 ${generating ? "animate-spin" : ""}`}
@@ -545,25 +568,25 @@ export default function Dashboard() {
 
         {/* Banner Persetujuan Usulan */}
         {proposedPlan && !generating && (
-          <div className="mb-6 bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="mb-6 bg-brand/10 border border-mint/30 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-indigo-300 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-pale flex items-center gap-2">
                 <Sparkles className="w-4 h-4" /> Usulan Jadwal Baru
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-ink-2 mt-1">
                 {proposedPlan.summary}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={rejectSchedule}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-ink-2 bg-raised hover:bg-line-strong rounded-lg transition"
               >
                 <X className="w-3.5 h-3.5" /> Tolak
               </button>
               <button
                 onClick={approveSchedule}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-950 bg-indigo-400 hover:bg-indigo-300 rounded-lg transition"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-canvas bg-mint hover:bg-pale rounded-lg transition"
               >
                 <Check className="w-3.5 h-3.5" /> Setujui Jadwal
               </button>
@@ -573,13 +596,13 @@ export default function Dashboard() {
 
         {/* Warnings */}
         {timelineWarnings?.length > 0 && (
-          <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="mb-4 bg-warn/10 border border-warn/20 rounded-xl p-3 flex gap-2">
+            <AlertTriangle className="w-4 h-4 text-warn shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-medium text-amber-300">
+              <p className="text-xs font-medium text-warn">
                 Catatan Jadwal
               </p>
-              <ul className="text-[11px] text-amber-400/80 mt-1 list-disc list-inside">
+              <ul className="text-[11px] text-warn/80 mt-1 list-disc list-inside">
                 {timelineWarnings.map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
@@ -594,20 +617,20 @@ export default function Dashboard() {
         ) : generating ? (
           <TimelineLoadingState /> // <--- Loading UI baru
         ) : timelineError ? (
-          <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="bg-danger/10 border border-danger/20 rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-rose-300">
+              <p className="text-sm font-medium text-danger">
                 Gagal menyusun jadwal
               </p>
-              <p className="text-xs text-rose-400/80 mt-0.5 break-words">
+              <p className="text-xs text-danger/80 mt-0.5 break-words">
                 {timelineError}
               </p>
             </div>
             <button
               onClick={handleGenerate}
               disabled={!canGenerate}
-              className="text-[11px] font-semibold text-rose-300 hover:text-rose-200 underline shrink-0 disabled:opacity-50"
+              className="text-[11px] font-semibold text-danger hover:text-danger underline shrink-0 disabled:opacity-50"
             >
               Coba lagi
             </button>
@@ -616,15 +639,15 @@ export default function Dashboard() {
           // ===== MODE COMPARE (LAMA VS BARU) =====
           <div className="space-y-6">
             {/* Jadwal Usulan (BARU) */}
-            <div className="border-2 border-indigo-500/40 rounded-2xl p-4 bg-slate-900 shadow-lg shadow-indigo-500/10">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+            <div className="border-2 border-mint/40 rounded-2xl p-4 bg-surface shadow-lg shadow-mint/10">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-line">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                  <span className="text-[11px] uppercase text-indigo-400 font-bold tracking-wider">
+                  <Sparkles className="w-4 h-4 text-mint" />
+                  <span className="text-[11px] uppercase text-mint font-bold tracking-wider">
                     Usulan Jadwal Baru (Pratinjau)
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
+                <span className="text-[10px] text-ink-3 bg-raised px-2 py-0.5 rounded">
                   Belum disimpan
                 </span>
               </div>
@@ -638,15 +661,15 @@ export default function Dashboard() {
             {/* Jadwal Aktif Sebelumnya (LAMA) */}
             {finalActiveBlocks.length > 0 && (
               <div className="relative">
-                <div className="absolute inset-0 bg-slate-950/60 z-10 flex items-center justify-center rounded-2xl opacity-0 hover:opacity-100 transition-opacity">
-                  <span className="text-xs font-medium text-slate-300 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800 shadow-xl">
+                <div className="absolute inset-0 bg-canvas/60 z-10 flex items-center justify-center rounded-2xl opacity-0 hover:opacity-100 transition-opacity">
+                  <span className="text-xs font-medium text-ink-2 bg-surface px-3 py-1.5 rounded-full border border-line shadow-xl">
                     Ini adalah jadwal yang akan digantikan
                   </span>
                 </div>
-                <div className="border border-slate-800 rounded-2xl p-4 bg-slate-900/40 opacity-40 grayscale-[50%]">
-                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
-                    <ArrowRightLeft className="w-4 h-4 text-slate-500" />
-                    <span className="text-[11px] uppercase text-slate-400 font-bold tracking-wider">
+                <div className="border border-line rounded-2xl p-4 bg-surface/40 opacity-40 grayscale-[50%]">
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-line">
+                    <ArrowRightLeft className="w-4 h-4 text-ink-3" />
+                    <span className="text-[11px] uppercase text-ink-2 font-bold tracking-wider">
                       Jadwal Lama (Aktif Saat Ini)
                     </span>
                   </div>
@@ -661,7 +684,7 @@ export default function Dashboard() {
           </div>
         ) : finalActiveBlocks.length > 0 ? (
           // ===== MODE NORMAL (HANYA JADWAL AKTIF) =====
-          <div className="border border-slate-800 rounded-2xl p-4 bg-slate-900/30">
+          <div className="border border-line rounded-2xl p-4 bg-surface/30">
             <TimelineView
               blocks={finalActiveBlocks}
               sleepStart={sleepStart}
@@ -696,7 +719,7 @@ function LoadingState() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-16 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"
+          className="h-16 bg-surface border border-line rounded-xl animate-pulse"
         />
       ))}
     </div>
@@ -705,17 +728,17 @@ function LoadingState() {
 
 function EmptyState({ onCreate }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 border-dashed rounded-xl p-12 text-center">
-      <div className="w-12 h-12 bg-slate-800/60 rounded-full flex items-center justify-center mx-auto mb-3">
-        <CalendarDays className="w-5 h-5 text-slate-600" />
+    <div className="bg-surface border border-line border-dashed rounded-xl p-12 text-center">
+      <div className="w-12 h-12 bg-raised/60 rounded-full flex items-center justify-center mx-auto mb-3">
+        <CalendarDays className="w-5 h-5 text-ink-4" />
       </div>
-      <p className="text-sm font-medium text-slate-300 mb-1">Belum ada tugas</p>
-      <p className="text-xs text-slate-500 mb-4">
+      <p className="text-sm font-medium text-ink-2 mb-1">Belum ada tugas</p>
+      <p className="text-xs text-ink-3 mb-4">
         Mulai dengan menambahkan tugas atau agenda pertama Anda.
       </p>
       <button
         onClick={onCreate}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-mint hover:text-pale transition"
       >
         <Plus className="w-3.5 h-3.5" /> Tambah Item
       </button>
@@ -729,7 +752,7 @@ function TimelineSkeleton() {
       {[1, 2].map((i) => (
         <div
           key={i}
-          className="h-32 bg-slate-900 border border-slate-800 rounded-xl animate-pulse"
+          className="h-32 bg-surface border border-line rounded-xl animate-pulse"
         />
       ))}
     </div>
@@ -738,24 +761,47 @@ function TimelineSkeleton() {
 
 function EmptyTimeline({ onGenerate, disabled }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 border-dashed rounded-xl p-8 text-center">
-      <div className="w-12 h-12 bg-slate-800/60 rounded-full flex items-center justify-center mx-auto mb-3">
-        <CalendarClock className="w-5 h-5 text-slate-600" />
+    <div className="bg-surface border border-line border-dashed rounded-xl p-8 text-center">
+      <div className="w-12 h-12 bg-raised/60 rounded-full flex items-center justify-center mx-auto mb-3">
+        <CalendarClock className="w-5 h-5 text-ink-4" />
       </div>
-      <p className="text-sm font-medium text-slate-300 mb-1">
+      <p className="text-sm font-medium text-ink-2 mb-1">
         Belum ada jadwal
       </p>
-      <p className="text-xs text-slate-500 mb-4 max-w-sm mx-auto">
+      <p className="text-xs text-ink-3 mb-4 max-w-sm mx-auto">
         Klik tombol di bawah untuk menyusun timeline otomatis berdasarkan
         prioritas tugas, agenda, dan jam tidur Anda.
       </p>
       <button
         onClick={onGenerate}
         disabled={disabled}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-mint hover:text-pale disabled:opacity-50 disabled:cursor-not-allowed transition"
       >
         <RefreshCw className="w-3.5 h-3.5" /> Jadwalkan sekarang
       </button>
+    </div>
+  );
+}
+
+const STAT_TONES = {
+  mint: "text-mint bg-mint/10 border-mint/20",
+  info: "text-info bg-info/10 border-info/20",
+  warn: "text-warn bg-warn/10 border-warn/20",
+  danger: "text-danger bg-danger/10 border-danger/20",
+};
+
+function StatCard({ label, value, icon: Icon, tone }) {
+  return (
+    <div className="bg-surface border border-line rounded-xl p-3.5 flex items-center gap-3">
+      <div className={`p-2 rounded-lg border ${STAT_TONES[tone]}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xl font-bold text-ink leading-none tabular-nums">
+          {value}
+        </p>
+        <p className="text-[11px] text-ink-3 mt-1">{label}</p>
+      </div>
     </div>
   );
 }

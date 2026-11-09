@@ -52,7 +52,7 @@ function mapTaskToForm(task) {
 }
 
 const inputCls =
-  "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition [color-scheme:dark]";
+  "w-full bg-canvas border border-line rounded-lg px-3 py-2 text-xs text-ink placeholder:text-ink-4 focus:outline-none focus:border-mint focus:ring-2 focus:ring-mint/20 transition [color-scheme:dark]";
 
 export default function TaskForm({
   open,
@@ -115,10 +115,10 @@ export default function TaskForm({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Toggle Tipe Item */}
-        <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+        <div className="flex items-center justify-between bg-canvas p-3 rounded-xl border border-line">
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded-lg transition-colors ${form.is_fixed ? "bg-rose-500/20 text-rose-400" : "bg-indigo-500/20 text-indigo-400"}`}
+              className={`p-2 rounded-lg transition-colors ${form.is_fixed ? "bg-danger/20 text-danger" : "bg-mint/20 text-mint"}`}
             >
               {form.is_fixed ? (
                 <Briefcase className="w-4 h-4" />
@@ -127,10 +127,10 @@ export default function TaskForm({
               )}
             </div>
             <div>
-              <p className="text-xs font-bold text-white">
+              <p className="text-xs font-bold text-ink">
                 {form.is_fixed ? "Agenda (Waktu Tetap)" : "Tugas Fleksibel"}
               </p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-ink-3">
                 {form.is_fixed
                   ? "AI tidak akan menggeser jadwal ini."
                   : "AI akan menjadwalkan ini di waktu kosong."}
@@ -144,12 +144,12 @@ export default function TaskForm({
               checked={form.is_fixed}
               onChange={(e) => set("is_fixed", e.target.checked)}
             />
-            <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+            <div className="w-9 h-5 bg-raised peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-danger"></div>
           </label>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1.5">
+          <label className="block text-xs font-medium text-ink-2 mb-1.5">
             Judul {form.is_fixed ? "Agenda" : "Tugas"}
           </label>
           <input
@@ -167,9 +167,9 @@ export default function TaskForm({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1.5">
+          <label className="block text-xs font-medium text-ink-2 mb-1.5">
             Deskripsi{" "}
-            <span className="text-slate-600 font-normal">(opsional)</span>
+            <span className="text-ink-4 font-normal">(opsional)</span>
           </label>
           <textarea
             rows={2}
@@ -182,7 +182,7 @@ export default function TaskForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-ink-2 mb-1.5">
               Kategori
             </label>
             <select
@@ -201,7 +201,7 @@ export default function TaskForm({
           {/* Estimasi hanya muncul jika Tugas Fleksibel */}
           {!form.is_fixed && (
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label className="block text-xs font-medium text-ink-2 mb-1.5">
                 Estimasi (menit)
               </label>
               <input
@@ -220,9 +220,9 @@ export default function TaskForm({
 
         {/* Input Waktu */}
         {form.is_fixed ? (
-          <div className="grid grid-cols-2 gap-3 bg-rose-500/5 p-3 rounded-lg border border-rose-500/20">
+          <div className="grid grid-cols-2 gap-3 bg-danger/5 p-3 rounded-lg border border-danger/20">
             <div>
-              <label className="block text-xs font-medium text-rose-300 mb-1.5">
+              <label className="block text-xs font-medium text-danger mb-1.5">
                 Mulai
               </label>
               <input
@@ -234,7 +234,7 @@ export default function TaskForm({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-rose-300 mb-1.5">
+              <label className="block text-xs font-medium text-danger mb-1.5">
                 Selesai
               </label>
               <input
@@ -248,9 +248,9 @@ export default function TaskForm({
           </div>
         ) : (
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-ink-2 mb-1.5">
               Deadline{" "}
-              <span className="text-slate-600 font-normal">(opsional)</span>
+              <span className="text-ink-4 font-normal">(opsional)</span>
             </label>
             <input
               type="datetime-local"
@@ -263,12 +263,12 @@ export default function TaskForm({
 
         {/* Slider Prioritas */}
         <div className="grid grid-cols-2 gap-4 pt-1">
-          <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3">
+          <div className="bg-canvas/60 border border-line rounded-lg p-3">
             <div className="flex justify-between items-baseline mb-1">
-              <label className="text-xs font-medium text-slate-300">
+              <label className="text-xs font-medium text-ink-2">
                 Kepentingan
               </label>
-              <span className="text-xs font-bold text-indigo-400 tabular-nums">
+              <span className="text-xs font-bold text-mint tabular-nums">
                 {form.importance}/5
               </span>
             </div>
@@ -279,15 +279,15 @@ export default function TaskForm({
               step={1}
               value={form.importance}
               onChange={(e) => set("importance", e.target.value)}
-              className="w-full accent-indigo-500"
+              className="w-full accent-mint"
             />
           </div>
-          <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3">
+          <div className="bg-canvas/60 border border-line rounded-lg p-3">
             <div className="flex justify-between items-baseline mb-1">
-              <label className="text-xs font-medium text-slate-300">
+              <label className="text-xs font-medium text-ink-2">
                 Konsekuensi
               </label>
-              <span className="text-xs font-bold text-rose-400 tabular-nums">
+              <span className="text-xs font-bold text-danger tabular-nums">
                 {form.late_consequence}/5
               </span>
             </div>
@@ -298,26 +298,26 @@ export default function TaskForm({
               step={1}
               value={form.late_consequence}
               onChange={(e) => set("late_consequence", e.target.value)}
-              className="w-full accent-rose-500"
+              className="w-full accent-danger"
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-800 -mb-1">
+        <div className="flex justify-end gap-2 pt-3 border-t border-line -mb-1">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+            className="px-4 py-2 text-xs font-medium text-ink-2 hover:text-ink rounded-lg hover:bg-raised transition"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className={`font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 transition text-white disabled:opacity-50 ${
+            className={`font-semibold text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 transition text-canvas disabled:opacity-50 ${
               form.is_fixed
-                ? "bg-rose-600 hover:bg-rose-500"
-                : "bg-indigo-600 hover:bg-indigo-500"
+                ? "bg-danger hover:bg-danger/85"
+                : "bg-mint hover:bg-pale"
             }`}
           >
             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

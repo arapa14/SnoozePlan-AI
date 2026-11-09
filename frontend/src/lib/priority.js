@@ -63,8 +63,10 @@ export function computePriorityScore(
   // 5. Ketersediaan waktu: apakah estimasi masih muat sebelum deadline?
   let availability = 0.5;
   if (task.deadline) {
-    if (hoursLeft <= 0) availability = 1; // sudah lewat → anggap urgent
-    else if (hoursLeft >= neededHours) availability = 1; // muat
+    if (hoursLeft <= 0)
+      availability = 1; // sudah lewat → anggap urgent
+    else if (hoursLeft >= neededHours)
+      availability = 1; // muat
     else availability = Math.max(0, hoursLeft / neededHours); // tidak muat
   }
 
@@ -95,10 +97,22 @@ export function computePriorityScore(
 
 export function priorityLevel(score) {
   if (score >= 80)
-    return { label: "CRITICAL", className: "bg-rose-500/15 text-rose-400" };
+    return {
+      label: "CRITICAL",
+      className: "bg-danger/15 text-danger",
+      bar: "bg-danger",
+    };
   if (score >= 60)
-    return { label: "HIGH", className: "bg-amber-500/15 text-amber-400" };
+    return { label: "HIGH", className: "bg-warn/15 text-warn", bar: "bg-warn" };
   if (score >= 40)
-    return { label: "MEDIUM", className: "bg-sky-500/15 text-sky-400" };
-  return { label: "LOW", className: "bg-slate-700/50 text-slate-400" };
+    return {
+      label: "MEDIUM",
+      className: "bg-info/15 text-info",
+      bar: "bg-info",
+    };
+  return {
+    label: "LOW",
+    className: "bg-line text-ink-3",
+    bar: "bg-line-strong",
+  };
 }

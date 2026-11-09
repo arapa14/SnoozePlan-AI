@@ -15,38 +15,38 @@ import {
 } from "lucide-react";
 
 const inputCls =
-  "w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition";
+  "w-full bg-canvas border border-line rounded-lg px-3 py-2 text-xs text-ink focus:outline-none focus:border-mint focus:ring-2 focus:ring-mint/20 transition";
 
 const WEIGHT_FIELDS = [
   {
     key: "w_urgency",
     label: "Urgensi",
     hint: "Kedekatan deadline",
-    accent: "accent-rose-500",
+    accent: "accent-danger",
   },
   {
     key: "w_importance",
     label: "Kepentingan",
     hint: "Pengaruh terhadap tujuan",
-    accent: "accent-amber-500",
+    accent: "accent-warn",
   },
   {
     key: "w_consequence",
     label: "Konsekuensi",
     hint: "Dampak jika telat",
-    accent: "accent-orange-500",
+    accent: "accent-ember",
   },
   {
     key: "w_duration",
     label: "Durasi",
     hint: "Kecocokan dengan work block",
-    accent: "accent-sky-500",
+    accent: "accent-info",
   },
   {
     key: "w_availability",
     label: "Ketersediaan",
     hint: "Kecocokan dengan waktu luang",
-    accent: "accent-emerald-500",
+    accent: "accent-mint",
   },
 ];
 
@@ -232,7 +232,7 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="py-16 flex justify-center text-slate-500 text-xs">
+      <div className="py-16 flex justify-center text-ink-3 text-xs">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Memuat pengaturan...
       </div>
     );
@@ -242,15 +242,15 @@ export default function Settings() {
     <div className="space-y-6 pb-12">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Pengaturan</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-ink">Pengaturan</h1>
+          <p className="text-xs text-ink-3 mt-0.5">
             Sesuaikan profil, jam tidur, pola kerja, dan bobot prioritas.
           </p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving || isSleepInvalid}
-          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shrink-0"
+          className="bg-mint hover:bg-pale disabled:opacity-50 text-canvas font-semibold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shrink-0"
         >
           {saving ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -306,7 +306,7 @@ export default function Settings() {
         <div
           className={
             isSleepInvalid
-              ? "bg-rose-500/10 border border-rose-500/20 p-3 rounded-lg"
+              ? "bg-danger/10 border border-danger/20 p-3 rounded-lg"
               : ""
           }
         >
@@ -318,15 +318,15 @@ export default function Settings() {
               step={0.5}
               value={form.min_sleep_hours}
               onChange={(e) => set("min_sleep_hours", e.target.value)}
-              className="w-full accent-indigo-500"
+              className="w-full accent-mint"
             />
           </Field>
           <div className="flex justify-between text-[10px] mt-1">
-            <span className="text-slate-500">
+            <span className="text-ink-3">
               Jendela tidur saat ini: {maxSleepAvailable} jam
             </span>
             {isSleepInvalid && (
-              <span className="text-rose-400 font-bold flex items-center gap-1">
+              <span className="text-danger font-bold flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" /> Durasi minimal melebihi
                 jendela
               </span>
@@ -396,9 +396,8 @@ export default function Settings() {
       <Section icon={Sliders} title="Bobot Prioritas">
         {presets.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-slate-300 mb-2 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Preset
-              Persona
+            <p className="text-xs font-medium text-ink-2 mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-mint" /> Preset Persona
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {presets.map((p) => (
@@ -407,13 +406,13 @@ export default function Settings() {
                   onClick={() => applyPreset(p)}
                   className={`text-left p-2.5 rounded-lg border transition ${
                     form.persona_key === p.key
-                      ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-300"
-                      : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700"
+                      ? "bg-mint/10 border-mint/40 text-pale"
+                      : "bg-canvas border-line text-ink-2 hover:border-line-strong"
                   }`}
                 >
                   <p className="text-xs font-semibold">{p.name}</p>
                   {p.description && (
-                    <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">
+                    <p className="text-[10px] text-ink-3 mt-0.5 line-clamp-2">
                       {p.description}
                     </p>
                   )}
@@ -427,11 +426,11 @@ export default function Settings() {
           {WEIGHT_FIELDS.map((f) => (
             <div key={f.key}>
               <div className="flex justify-between items-baseline text-xs mb-1">
-                <span className="font-medium text-slate-300">
+                <span className="font-medium text-ink-2">
                   {f.label}{" "}
-                  <span className="text-slate-600 font-normal">· {f.hint}</span>
+                  <span className="text-ink-4 font-normal">· {f.hint}</span>
                 </span>
-                <span className="text-indigo-400 font-mono text-[11px] tabular-nums">
+                <span className="text-mint font-mono text-[11px] tabular-nums">
                   {Number(form[f.key]).toFixed(2)}
                 </span>
               </div>
@@ -448,7 +447,7 @@ export default function Settings() {
           ))}
         </div>
         {isCustomized() && (
-          <p className="text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-2.5 py-1.5">
+          <p className="text-[11px] text-warn bg-warn/10 border border-warn/20 rounded-md px-2.5 py-1.5">
             Bobot tidak sama dengan preset — akan disimpan sebagai{" "}
             <strong>kustom</strong>.
           </p>
@@ -460,12 +459,12 @@ export default function Settings() {
 
 function Section({ icon: Icon, title, children }) {
   return (
-    <section className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+    <section className="bg-surface border border-line rounded-xl p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <div className="p-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-md">
-          <Icon className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="p-1.5 bg-mint/10 border border-mint/20 rounded-md">
+          <Icon className="w-3.5 h-3.5 text-mint" />
         </div>
-        <h2 className="text-sm font-bold text-white">{title}</h2>
+        <h2 className="text-sm font-bold text-ink">{title}</h2>
       </div>
       {children}
     </section>
@@ -475,7 +474,7 @@ function Section({ icon: Icon, title, children }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-300 mb-1.5">
+      <label className="block text-xs font-medium text-ink-2 mb-1.5">
         {label}
       </label>
       {children}

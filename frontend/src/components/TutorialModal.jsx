@@ -88,35 +88,35 @@ export default function TutorialModal({ open, onClose }) {
             <div
               key={idx}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
-                idx === step ? "bg-indigo-500" : "bg-slate-800"
+                idx === step ? "bg-mint" : "bg-raised"
               }`}
             />
           ))}
         </div>
 
         {/* Konten */}
-        <div className="bg-slate-950/50 border border-slate-800 rounded-xl p-5">
+        <div className="bg-canvas/50 border border-line rounded-xl p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-              <current.icon className="w-5 h-5 text-indigo-400" />
+            <div className="p-2 bg-mint/10 border border-mint/20 rounded-lg">
+              <current.icon className="w-5 h-5 text-mint" />
             </div>
-            <h3 className="text-sm font-bold text-white">{current.title}</h3>
+            <h3 className="text-sm font-bold text-ink">{current.title}</h3>
           </div>
 
-          <p className="text-xs text-slate-300 mb-4">{current.description}</p>
+          <p className="text-xs text-ink-2 mb-4">{current.description}</p>
 
           <ul className="space-y-2.5">
             {current.points.map((point, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-2 text-xs text-slate-400 leading-relaxed"
+                className="flex items-start gap-2 text-xs text-ink-2 leading-relaxed"
               >
-                <span className="mt-1.5 w-1 h-1 rounded-full bg-indigo-500 shrink-0" />
+                <span className="mt-1.5 w-1 h-1 rounded-full bg-mint shrink-0" />
                 <span
                   dangerouslySetInnerHTML={{
                     __html: point.replace(
                       /\*\*(.*?)\*\*/g,
-                      '<strong class="text-slate-200">$1</strong>',
+                      '<strong class="text-ink">$1</strong>',
                     ),
                   }}
                 />
@@ -130,7 +130,7 @@ export default function TutorialModal({ open, onClose }) {
           <button
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={isFirst}
-            className="flex items-center gap-1 px-3 py-2 text-xs font-medium text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition"
+            className="flex items-center gap-1 px-3 py-2 text-xs font-medium text-ink-2 hover:text-ink disabled:opacity-30 disabled:hover:text-ink-2 transition"
           >
             <ChevronLeft className="w-4 h-4" /> Sebelumnya
           </button>
@@ -138,7 +138,7 @@ export default function TutorialModal({ open, onClose }) {
           {isLast ? (
             <button
               onClick={handleClose} // <-- Gunakan handleClose di sini
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition"
+              className="px-4 py-2 bg-mint hover:bg-pale text-canvas text-xs font-semibold rounded-lg transition"
             >
               Selesai & Mulai
             </button>
@@ -147,7 +147,7 @@ export default function TutorialModal({ open, onClose }) {
               onClick={() =>
                 setStep((s) => Math.min(TUTORIAL_STEPS.length - 1, s + 1))
               }
-              className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
+              className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-mint hover:text-pale transition"
             >
               Selanjutnya <ChevronRight className="w-4 h-4" />
             </button>

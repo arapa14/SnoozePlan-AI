@@ -103,27 +103,32 @@ export default function TimelineView({
       {grouped.map(({ day, items, totalMins }) => (
         <div
           key={day.toISOString()}
-          className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm"
+          className="bg-surface border border-line rounded-2xl overflow-hidden shadow-sm"
         >
           {/* Header Hari */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 bg-slate-900/80">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-surface/80">
             <div className="flex items-center gap-3">
-              <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 p-2 rounded-xl">
+              <div className="bg-mint/10 border border-mint/20 text-mint p-2 rounded-xl">
                 <span className="text-sm font-bold block leading-none">
                   {day.toLocaleDateString("id-ID", { day: "2-digit" })}
                 </span>
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">
+                <h3 className="text-sm font-bold text-ink">
                   {day.toLocaleDateString("id-ID", {
                     weekday: "long",
                     month: "long",
                     year: "numeric",
                   })}
+                  {day.toDateString() === new Date().toDateString() && (
+                    <span className="ml-2 align-middle text-[10px] font-semibold text-mint bg-mint/10 border border-mint/20 px-1.5 py-0.5 rounded">
+                      Hari ini
+                    </span>
+                  )}
                 </h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-ink-2 mt-0.5">
                   Total Beban:{" "}
-                  <span className="font-semibold text-indigo-400">
+                  <span className="font-semibold text-mint">
                     {Math.round((totalMins / 60) * 10) / 10} Jam
                   </span>
                 </p>
@@ -134,7 +139,7 @@ export default function TimelineView({
           {/* Timeline Rail */}
           <div className="p-4 sm:p-5 relative">
             {/* Garis Vertikal */}
-            <div className="absolute left-[31px] sm:left-[39px] top-6 bottom-6 w-px bg-slate-800" />
+            <div className="absolute left-[31px] sm:left-[39px] top-6 bottom-6 w-px bg-raised" />
 
             <div className="space-y-3">
               {items.map((b) => {
@@ -150,22 +155,22 @@ export default function TimelineView({
                     <div
                       className={`relative z-10 mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-1 sm:ml-2 ${
                         isSleep
-                          ? "bg-indigo-900 border-indigo-400"
+                          ? "bg-canvas border-ink-3"
                           : isBreak
-                            ? "bg-slate-800 border-slate-500"
+                            ? "bg-raised border-ink-3"
                             : isAgenda
-                              ? "bg-rose-900 border-rose-400"
-                              : "bg-emerald-900 border-emerald-400"
+                              ? "bg-danger/30 border-danger"
+                              : "bg-brand/30 border-mint"
                       }`}
                     >
                       {isWork && (
-                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-mint rounded-full" />
                       )}
                       {isAgenda && (
-                        <div className="w-1.5 h-1.5 bg-rose-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-danger rounded-full" />
                       )}
                       {isSleep && (
-                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-ink-3 rounded-full" />
                       )}
                     </div>
 
@@ -173,55 +178,55 @@ export default function TimelineView({
                     <div
                       className={`flex-1 p-3 rounded-xl border transition-all ${
                         isSleep
-                          ? "bg-slate-900/40 border-slate-800/50 opacity-60"
+                          ? "bg-surface/40 border-line/50 opacity-60"
                           : isBreak
-                            ? "bg-slate-800/20 border-slate-800/60 border-dashed"
+                            ? "bg-raised/20 border-line/60 border-dashed"
                             : isAgenda
-                              ? "bg-rose-950/20 border-rose-900/50 shadow-sm"
-                              : "bg-slate-950 border-slate-800 hover:border-slate-700 shadow-sm"
+                              ? "bg-danger/10 border-danger/30 shadow-sm"
+                              : "bg-canvas border-line hover:border-line-strong shadow-sm"
                       }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                         <div className="flex items-center gap-2">
                           {isSleep ? (
-                            <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                            <Moon className="w-3.5 h-3.5 text-mint" />
                           ) : isBreak ? (
-                            <Coffee className="w-3.5 h-3.5 text-slate-500" />
+                            <Coffee className="w-3.5 h-3.5 text-ink-3" />
                           ) : isAgenda ? (
-                            <Briefcase className="w-3.5 h-3.5 text-rose-400" />
+                            <Briefcase className="w-3.5 h-3.5 text-danger" />
                           ) : (
-                            <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                            <Zap className="w-3.5 h-3.5 text-mint" />
                           )}
                           <p
                             className={`text-xs sm:text-sm font-semibold ${
                               isSleep
-                                ? "text-slate-400"
+                                ? "text-ink-2"
                                 : isBreak
-                                  ? "text-slate-400"
+                                  ? "text-ink-2"
                                   : isAgenda
-                                    ? "text-rose-200"
-                                    : "text-slate-100"
+                                    ? "text-danger"
+                                    : "text-ink"
                             }`}
                           >
                             {b.task_title || (isBreak ? "Istirahat" : "Tugas")}
 
                             {isAgenda && (
-                              <span className="ml-2 text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-medium">
+                              <span className="ml-2 text-[10px] bg-danger/20 text-danger px-1.5 py-0.5 rounded font-medium">
                                 Agenda Tetap
                               </span>
                             )}
                             {isWork && b.chunk_index > 1 && (
-                              <span className="ml-2 text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-medium">
+                              <span className="ml-2 text-[10px] bg-raised text-ink-2 px-1.5 py-0.5 rounded font-medium">
                                 Bagian {b.chunk_index}
                               </span>
                             )}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 bg-slate-900/50 px-2 py-1 rounded w-fit tabular-nums">
+                        <div className="flex items-center gap-1.5 text-[11px] text-ink-2 bg-surface/50 px-2 py-1 rounded w-fit tabular-nums">
                           <Clock className="w-3 h-3" />
                           {fmtTime(b.start_at)} – {fmtTime(b.end_at)}
-                          <span className="text-slate-600">•</span>
-                          <span className="font-semibold text-slate-300">
+                          <span className="text-ink-4">•</span>
+                          <span className="font-semibold text-ink-2">
                             {mins} mnt
                           </span>
                         </div>

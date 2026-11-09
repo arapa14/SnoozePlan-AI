@@ -9,12 +9,13 @@ import {
 import PriorityBadge from "./PriorityBadge";
 import CriticalBadge from "./CriticalBadge";
 import OverdueBadge from "./OverdueBadge";
+import { priorityLevel } from "../lib/priority";
 
 const CATEGORY_STYLES = {
-  kuliah: "bg-sky-500/10 text-sky-400",
-  praktikum: "bg-emerald-500/10 text-emerald-400",
-  organisasi: "bg-amber-500/10 text-amber-400",
-  pribadi: "bg-slate-700/50 text-slate-300",
+  kuliah: "bg-info/10 text-info",
+  praktikum: "bg-mint/10 text-mint",
+  organisasi: "bg-warn/10 text-warn",
+  pribadi: "bg-line text-ink-2",
 };
 
 export default function TaskCard({
@@ -33,6 +34,8 @@ export default function TaskCard({
     !isDone &&
     new Date(task.deadline).getTime() < now;
 
+  const level = priorityLevel(score);
+
   const deadlineLabel = task.deadline
     ? new Date(task.deadline).toLocaleString("id-ID", {
         day: "numeric",
@@ -44,25 +47,34 @@ export default function TaskCard({
 
   return (
     <div
-      className={`group flex items-start gap-3 p-3 rounded-xl border transition ${
+      className={`group relative flex items-start gap-3 py-3 pl-4 pr-3 rounded-xl border overflow-hidden transition ${
         isDone
-          ? "bg-slate-900/40 border-slate-800/60 opacity-50"
+          ? "bg-surface/40 border-line/60 opacity-55"
           : critical
-            ? "bg-slate-900 border-rose-500/30 hover:border-rose-500/50"
+            ? "bg-surface border-danger/30 hover:border-danger/50"
             : isOverdue
-              ? "bg-slate-900 border-amber-500/25 hover:border-amber-500/40"
-              : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-900/70"
+              ? "bg-surface border-warn/25 hover:border-warn/40"
+              : "bg-surface border-line hover:border-line-strong"
       }`}
     >
+      {/* Penanda prioritas di sisi kiri */}
+      {!isDone && (
+        <span
+          aria-hidden
+          className={`absolute left-0 inset-y-0 w-1 ${critical ? "bg-danger" : level.bar}`}
+        />
+      )}
+
       <button
         onClick={() => onToggle(task)}
-        className="mt-0.5 shrink-0 text-slate-500 hover:text-emerald-400 transition"
+        className="mt-0.5 shrink-0 text-ink-4 hover:text-mint transition"
         title={isDone ? "Tandai belum selesai" : "Tandai selesai"}
+        aria-label={isDone ? "Tandai belum selesai" : "Tandai selesai"}
       >
         {isDone ? (
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <CheckCircle2 className="w-[18px] h-[18px] text-mint" />
         ) : (
-          <Circle className="w-4 h-4" />
+          <Circle className="w-[18px] h-[18px]" />
         )}
       </button>
 
@@ -70,14 +82,14 @@ export default function TaskCard({
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p
-              className={`text-sm font-medium leading-snug truncate ${
-                isDone ? "line-through text-slate-500" : "text-slate-100"
+              className={`text-sm font-semibold leading-snug truncate ${
+                isDone ? "line-through text-ink-3" : "text-ink"
               }`}
             >
               {task.title}
             </p>
             {task.description && !isDone && (
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+              <p className="text-[11px] text-ink-3 mt-0.5 truncate">
                 {task.description}
               </p>
             )}
@@ -90,9 +102,9 @@ export default function TaskCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500 flex-wrap">
+        <div className="flex items-center gap-2 mt-2 text-[11px] text-ink-3 flex-wrap">
           <span
-            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${CATEGORY_STYLES[task.category]}`}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${CATEGORY_STYLES[task.category] || CATEGORY_STYLES.pribadi}`}
           >
             {task.category}
           </span>
@@ -103,7 +115,7 @@ export default function TaskCard({
           {deadlineLabel && (
             <span
               className={`flex items-center gap-1 tabular-nums ${
-                isOverdue ? "text-amber-400 font-medium" : ""
+                isOverdue ? "text-warn font-medium" : ""
               }`}
             >
               {isOverdue && <AlertTriangle className="w-3 h-3" />}
@@ -113,18 +125,21 @@ export default function TaskCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-0.5 shrink-0">
+      {/* Aksi: tampil saat hover di desktop, selalu tampil di layar sentuh */}
+      <div className="flex items-center gap-0.5 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity">
         <button
           onClick={() => onEdit(task)}
-          className="p-1.5 text-slate-600 hover:text-indigo-400 hover:bg-slate-800 rounded-md transition"
+          className="p-1.5 text-ink-4 hover:text-mint hover:bg-raised rounded-md transition"
           title="Ubah"
+          aria-label="Ubah"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => onDelete(task)}
-          className="p-1.5 text-slate-600 hover:text-rose-400 hover:bg-slate-800 rounded-md transition"
+          className="p-1.5 text-ink-4 hover:text-danger hover:bg-raised rounded-md transition"
           title="Hapus"
+          aria-label="Hapus"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

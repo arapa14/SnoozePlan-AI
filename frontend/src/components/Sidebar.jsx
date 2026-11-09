@@ -21,6 +21,8 @@ export default function Sidebar({ onNavigate }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const name = profile?.display_name || profile?.full_name || "Mahasiswa";
+
   const handleStartTour = () => {
     onNavigate?.(); // Tutup drawer mobile jika ada
 
@@ -37,12 +39,12 @@ export default function Sidebar({ onNavigate }) {
   return (
     <div className="h-full flex flex-col">
       {/* Brand */}
-      <div className="h-14 px-5 border-b border-slate-800 flex items-center gap-2.5 shrink-0">
-        <div className="p-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
-          <Moon className="w-4 h-4 text-indigo-400" />
+      <div className="h-16 px-5 border-b border-line flex items-center gap-2.5 shrink-0">
+        <div className="p-1.5 bg-mint/10 border border-mint/20 rounded-lg">
+          <Moon className="w-4 h-4 text-mint" />
         </div>
-        <span className="font-bold text-sm tracking-tight text-white">
-          SnoozePlan<span className="text-indigo-400">.AI</span>
+        <span className="font-bold text-sm tracking-tight text-ink">
+          SnoozePlan<span className="text-mint">.AI</span>
         </span>
       </div>
 
@@ -54,46 +56,56 @@ export default function Sidebar({ onNavigate }) {
             to={to}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+              `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
                 isActive
-                  ? "bg-indigo-500/10 text-indigo-300"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-mint/10 text-mint"
+                  : "text-ink-2 hover:text-ink hover:bg-raised/70"
               }`
             }
           >
-            <Icon className="w-4 h-4 shrink-0" />
-            {label}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="absolute left-0 inset-y-2 w-0.5 rounded-full bg-mint"
+                  />
+                )}
+                <Icon className="w-4 h-4 shrink-0" />
+                {label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-slate-800 shrink-0 space-y-1">
-        
-        {/* Tombol Tur Aplikasi */}
+      <div className="p-3 border-t border-line shrink-0 space-y-1.5">
         <button
           onClick={handleStartTour}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-ink-3 hover:text-mint hover:bg-mint/10 transition"
         >
           <HelpCircle className="w-4 h-4" />
           Mulai Tur Aplikasi
         </button>
 
-        {/* Info User */}
-        <div className="px-3 py-2 mb-1">
-          <p className="text-xs font-medium text-slate-200 truncate">
-            {profile?.display_name || profile?.full_name || "Mahasiswa"}
-          </p>
-          <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
+        {/* Info user */}
+        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-canvas/60 border border-line">
+          <div className="w-8 h-8 rounded-full bg-mint/15 text-mint grid place-items-center text-xs font-bold shrink-0">
+            {name.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-ink truncate">{name}</p>
+            <p className="text-[10px] text-ink-3 truncate">{user?.email}</p>
+          </div>
         </div>
 
-        {/* Tombol Keluar */}
         <button
           onClick={() => {
             onNavigate?.();
             signOut();
           }}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 transition"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-ink-3 hover:text-danger hover:bg-danger/10 transition"
         >
           <LogOut className="w-4 h-4" />
           Keluar
