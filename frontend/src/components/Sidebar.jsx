@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { startTour } from "../lib/tour";
+import { logoutPush } from "../lib/onesignal";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -101,8 +102,9 @@ export default function Sidebar({ onNavigate }) {
         </div>
 
         <button
-          onClick={() => {
+          onClick={async () => {
             onNavigate?.();
+            await logoutPush().catch(() => {});
             signOut();
           }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-ink-3 hover:text-danger hover:bg-danger/10 transition"

@@ -6,13 +6,12 @@ import {
   Loader2,
   Save,
   Check,
-  Moon,
   Sun,
   User,
   Sliders,
   Sparkles,
-  AlertTriangle,
 } from "lucide-react";
+import NotificationSettings from "../components/NotificationSetting";
 
 const inputCls =
   "w-full bg-canvas border border-line rounded-lg px-3 py-2 text-xs text-ink focus:outline-none focus:border-mint focus:ring-2 focus:ring-mint/20 transition";
@@ -453,6 +452,8 @@ export default function Settings() {
           </p>
         )}
       </Section>
+
+      <NotificationSettings />
     </div>
   );
 }

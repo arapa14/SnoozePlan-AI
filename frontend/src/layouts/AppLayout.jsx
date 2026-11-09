@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom"; // Tambahkan useNavigate & useLocation
 import { Menu, Moon, HelpCircle } from "lucide-react"; // Tambahkan HelpCircle
 import Sidebar from "../components/Sidebar";
 import { startTour } from "../lib/tour"; // Import fungsi tur
+import { useAuth } from "../hooks/useAuth";
+import { linkPushUser } from "../lib/onesignal";
 
 export default function AppLayout() {
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user?.id) linkPushUser(user.id).catch(console.error);
+  }, [user?.id]);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
